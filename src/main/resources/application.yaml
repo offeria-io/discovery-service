@@ -1,3 +1,57 @@
 spring:
   application:
     name: discovery-service
+  profiles:
+    active: dev
+  security:
+    user:
+      name: admin
+      password: password # In production, use environment variables
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: false # Eureka Server shouldn't register with itself
+    fetch-registry: false # Eureka Server doesn't need to fetch registry
+    service-url:
+      defaultZone: http://admin:password@${eureka.instance.hostname}:${server.port}/eureka/
+  server:
+    wait-time-in-ms-when-sync-empty: 0 # Disable waiting for syncing on startup (dev only)
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+server:
+  port: 8761
+
+eureka:
+  instance:
+    hostname: localhost
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+server:
+  port: 8761
+
+eureka:
+  instance:
+    hostname: discovery-service # Container name in Docker
+    prefer-ip-address: true
+  server:
+    enable-self-preservation: true # Enable self-preservation in production
+    eviction-interval-timer-in-ms: 60000 # Evict expired instances every 60s
